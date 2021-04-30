@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="696b503a-5f0e-4e20-9c93-96e97f3d76d3" name="默认变更列表" comment="">
-      <change afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+    <list default="true" id="5b18d808-14db-414b-b5c8-2cda4a354cab" name="默认变更列表" comment="">
+      <change afterPath="$PROJECT_DIR$/three/main.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/three/srvg/group.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/three/srvg/options.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/three/srvg/srv/options.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/three/srvg/srv/server.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Go File" />
+      </list>
+    </option>
   </component>
   <component name="GOROOT" url="file://$PROJECT_DIR$/../../../software/golang" />
   <component name="Git.Settings">
@@ -16,31 +30,40 @@
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
   </component>
-  <component name="ProjectId" id="1rRGJIabY4yYAfXGd4v7iQfN7jt" />
+  <component name="ProjectId" id="1rs0drIj9SNk3Vqt0SRaYWRYP6d" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="DefaultGoTemplateProperty" value="Go File" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="last_opened_file_path" value="$USER_HOME$" />
+    <property name="settings.editor.selected.configurable" value="watcher.settings" />
+    <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\my\gitee\goadv\three\srvg\srv" />
+      <recent name="D:\my\gitee\goadv\three\srv" />
+    </key>
   </component>
   <component name="RunManager">
-    <configuration name="go build goadv/two" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+    <configuration name="go build goadv/three" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
       <module name="goadv" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />
-      <package value="goadv/two" />
+      <package value="goadv/three" />
       <directory value="$PROJECT_DIR$" />
-      <filePath value="$PROJECT_DIR$/two/main.go" />
+      <filePath value="$PROJECT_DIR$/three/main.go" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Go 构建.go build goadv/two" />
+        <item itemvalue="Go 构建.go build goadv/three" />
       </list>
     </recent_temporary>
   </component>
