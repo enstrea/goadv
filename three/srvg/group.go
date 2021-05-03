@@ -3,7 +3,6 @@ package srvg
 import (
 	"context"
 	"github.com/pkg/errors"
-	"goadv/three/srvg/srv"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,7 +14,7 @@ import (
 func New(opts ...Option) *serverGroup {
 	servGroup := &serverGroup{
 		wg:      new(sync.WaitGroup),
-		servers: make(map[string]*srv.Server),
+		servers: make(map[string]*Server),
 		wait:    time.Second * 5,
 		stop:    make(chan struct{}),
 	}
@@ -31,7 +30,7 @@ type serverGroup struct {
 	mu sync.Mutex
 	wg *sync.WaitGroup
 
-	servers map[string]*srv.Server
+	servers map[string]*Server
 	errors  sync.Map
 	wait    time.Duration
 	run     bool
@@ -39,7 +38,7 @@ type serverGroup struct {
 	stop    chan struct{}
 }
 
-func (sg *serverGroup) AddServer(server *srv.Server) {
+func (sg *serverGroup) AddServer(server *Server) {
 	sg.mu.Lock()
 	defer sg.mu.Unlock()
 
@@ -74,14 +73,14 @@ func (sg *serverGroup) Run() {
 
 	select {
 	case <-quit:
-		sg.shutdown()
+		sg.Shutdown()
 	case <-sg.stop:
 	}
 
 	sg.wg.Wait()
 }
 
-func (sg *serverGroup) shutdown() {
+func (sg *serverGroup) Shutdown() {
 	sg.mu.Lock()
 	defer sg.mu.Unlock()
 
@@ -112,7 +111,7 @@ func (sg *serverGroup) stopAll() {
 	sg.wg.Wait()
 }
 
-func (sg *serverGroup) startServer(serv *srv.Server) {
+func (sg *serverGroup) startServer(serv *Server) {
 	if serv.BeforeStart != nil {
 		done := make(chan struct{}, 1)
 		go serv.BeforeStart(done)
@@ -121,18 +120,18 @@ func (sg *serverGroup) startServer(serv *srv.Server) {
 		case <-done:
 		case <-time.After(sg.wait):
 			sg.errors.Store(serv.Name, errors.New("before start timeout"))
-			sg.shutdown()
+			sg.Shutdown()
 			return
 		}
 	}
 
 	if err := serv.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		sg.errors.Store(serv.Name, err)
-		sg.shutdown()
+		sg.Shutdown()
 	}
 }
 
-func (sg *serverGroup) stopServer(ctx context.Context, serv *srv.Server) {
+func (sg *serverGroup) stopServer(ctx context.Context, serv *Server) {
 	defer sg.wg.Done()
 
 	if err := serv.Server.Shutdown(ctx); err != nil {

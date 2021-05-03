@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"goadv/three/srvg"
-	"goadv/three/srvg/srv"
 	"net/http"
 	"time"
 )
@@ -22,25 +21,25 @@ func main() {
 	fmt.Println("quit")
 }
 
-func server1(name string, addr string) *srv.Server {
+func server1(name string, addr string) *srvg.Server {
 	serv := server(addr, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		_, _ = writer.Write([]byte(name))
 	}))
 
-	return srv.New(name, serv,
-		srv.BeforeStart(beforeStart(name)),
-		srv.AfterStop(afterStop(name)),
+	return srvg.NewServer(name, serv,
+		srvg.BeforeStart(beforeStart(name)),
+		srvg.AfterStop(afterStop(name)),
 	)
 }
 
-func server2(name string, addr string) *srv.Server {
+func server2(name string, addr string) *srvg.Server {
 	serv := server(addr, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		_, _ = writer.Write([]byte(name))
 	}))
 
-	return srv.New(name, serv,
-		srv.BeforeStart(beforeStart2(name)),
-		srv.AfterStop(afterStop(name)),
+	return srvg.NewServer(name, serv,
+		srvg.BeforeStart(beforeStart2(name)),
+		srvg.AfterStop(afterStop(name)),
 	)
 }
 

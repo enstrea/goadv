@@ -1,4 +1,4 @@
-package srv
+package srvg
 
 import "net/http"
 
@@ -10,7 +10,7 @@ type Server struct {
 	AfterStop   func(chan<- struct{})
 }
 
-func New(name string, server *http.Server, opts ...Option) *Server {
+func NewServer(name string, server *http.Server, opts ...SrvOption) *Server {
 	serv := &Server{
 		Name:   name,
 		Server: server,
