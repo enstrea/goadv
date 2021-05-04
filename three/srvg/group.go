@@ -1,21 +1,17 @@
 package srvg
 
 import (
-	"context"
-	"github.com/pkg/errors"
-	"net/http"
+	"goadv/three/srvg/srv"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 )
 
 func New(opts ...Option) *serverGroup {
 	servGroup := &serverGroup{
 		wg:      new(sync.WaitGroup),
-		servers: make(map[string]*Server),
-		wait:    time.Second * 5,
+		servers: make(map[string]srv.Server),
 		stop:    make(chan struct{}),
 	}
 
@@ -30,15 +26,14 @@ type serverGroup struct {
 	mu sync.Mutex
 	wg *sync.WaitGroup
 
-	servers map[string]*Server
+	servers map[string]srv.Server
 	errors  sync.Map
-	wait    time.Duration
 	run     bool
 	stopped bool
 	stop    chan struct{}
 }
 
-func (sg *serverGroup) AddServer(server *Server) {
+func (sg *serverGroup) AddServer(server srv.Server) {
 	sg.mu.Lock()
 	defer sg.mu.Unlock()
 
@@ -46,8 +41,8 @@ func (sg *serverGroup) AddServer(server *Server) {
 		return
 	}
 
-	if _, ok := sg.servers[server.Name]; !ok {
-		sg.servers[server.Name] = server
+	if _, ok := sg.servers[server.Name()]; !ok {
+		sg.servers[server.Name()] = server
 	}
 }
 
@@ -62,20 +57,21 @@ func (sg *serverGroup) Run() {
 
 	sg.startAll()
 
-	// 监听退出
-	go func() {
-		<-sg.stop
-		sg.stopAll()
-	}()
-
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGQUIT)
 
-	select {
-	case <-quit:
-		sg.Shutdown()
-	case <-sg.stop:
-	}
+	// 监听退出
+	go func() {
+		for {
+			select {
+			case <-sg.stop:
+				sg.stopAll()
+				return
+			case <-quit:
+				sg.Shutdown()
+			}
+		}
+	}()
 
 	sg.wg.Wait()
 }
@@ -94,60 +90,33 @@ func (sg *serverGroup) Shutdown() {
 // 启动所有服务
 func (sg *serverGroup) startAll() {
 	for _, serv := range sg.servers {
+		serv := serv
 		sg.wg.Add(1)
-		go sg.startServer(serv)
+
+		go func() {
+			if err := serv.Start(); err != nil {
+				sg.errors.Store(serv.Name(), err)
+				sg.Shutdown()
+			}
+		}()
 	}
 }
 
 // 关闭所有服务
 func (sg *serverGroup) stopAll() {
-	ctx, cancel := context.WithTimeout(context.Background(), sg.wait)
-	defer cancel()
-
 	for _, serv := range sg.servers {
-		go sg.stopServer(ctx, serv)
+		serv := serv
+
+		go func() {
+			defer sg.wg.Done()
+
+			if err := serv.Stop(); err != nil {
+				sg.errors.Store(serv.Name(), err)
+			}
+		}()
 	}
 
 	sg.wg.Wait()
-}
-
-func (sg *serverGroup) startServer(serv *Server) {
-	if serv.BeforeStart != nil {
-		done := make(chan struct{}, 1)
-		go serv.BeforeStart(done)
-
-		select {
-		case <-done:
-		case <-time.After(sg.wait):
-			sg.errors.Store(serv.Name, errors.New("before start timeout"))
-			sg.Shutdown()
-			return
-		}
-	}
-
-	if err := serv.Server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		sg.errors.Store(serv.Name, err)
-		sg.Shutdown()
-	}
-}
-
-func (sg *serverGroup) stopServer(ctx context.Context, serv *Server) {
-	defer sg.wg.Done()
-
-	if err := serv.Server.Shutdown(ctx); err != nil {
-		sg.errors.Store(serv.Name, err)
-	}
-
-	if serv.AfterStop != nil {
-		done := make(chan struct{}, 1)
-		go serv.AfterStop(done)
-
-		select {
-		case <-done:
-		case <-time.After(sg.wait):
-			sg.errors.Store(serv.Name, errors.New("after stop timeout"))
-		}
-	}
 }
 
 func (sg *serverGroup) GetErrors() map[string]error {
