@@ -1,46 +1,78 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"goadv/three/srvg"
-	"goadv/three/srvg/srv"
+	srv2 "goadv/three/srv"
+	"golang.org/x/sync/errgroup"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
 func main() {
-	sg := srvg.New()
+	servers := map[string]srv2.Server{
+		"server1": server1("server1", ":8081"),
+		"server2": server1("server2", ":8082"),
+		"server3": server2("server3", ":8083"),
+		"server4": server1("server4", ":8084"),
+	}
 
-	sg.AddServer(server1("server1", ":8081"))
-	sg.AddServer(server1("server2", ":8082"))
-	sg.AddServer(server1("server3", ":8083"))
-	sg.AddServer(server2("server4", ":8084"))
+	group := new(errgroup.Group)
+	group, ctx := errgroup.WithContext(context.Background())
 
-	sg.Run()
+	stop := make(chan struct{})
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGKILL, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
 
-	fmt.Println(sg.GetErrors())
-	fmt.Println("quit")
+	// 监听退出
+	go func() {
+		select {
+		case <-quit:
+			close(stop)
+		}
+	}()
+
+	for _, serv := range servers {
+		serv := serv
+		group.Go(func() error {
+			return serv.Start()
+		})
+		group.Go(func() error {
+			select {
+			case <-ctx.Done():
+			case <-stop:
+			}
+			return serv.Stop()
+		})
+	}
+
+	if err := group.Wait(); err != nil {
+		fmt.Println("server err: ", err)
+	}
 }
 
-func server1(name string, addr string) srv.Server {
+func server1(name string, addr string) srv2.Server {
 	serv := server(addr, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		_, _ = writer.Write([]byte(name))
 	}))
 
-	return srv.NewHttpServer(name, serv,
-		srv.BeforeStart(beforeStart(name)),
-		srv.AfterStop(afterStop(name)),
+	return srv2.NewHttpServer(name, serv,
+		srv2.BeforeStart(beforeStart(name)),
+		srv2.AfterStop(afterStop(name)),
 	)
 }
 
-func server2(name string, addr string) srv.Server {
+func server2(name string, addr string) srv2.Server {
 	serv := server(addr, http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		_, _ = writer.Write([]byte(name))
 	}))
 
-	return srv.NewHttpServer(name, serv,
-		srv.BeforeStart(beforeStart2(name)),
-		srv.AfterStop(afterStop(name)),
+	return srv2.NewHttpServer(name, serv,
+		srv2.BeforeStart(beforeStart2(name)),
+		srv2.AfterStop(afterStop(name)),
 	)
 }
 
