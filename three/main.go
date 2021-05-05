@@ -23,7 +23,7 @@ func main() {
 	group := new(errgroup.Group)
 	group, ctx := errgroup.WithContext(context.Background())
 
-	stop := make(chan struct{})
+	stop := make(chan struct{}, 1)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGKILL, syscall.SIGQUIT, syscall.SIGINT, syscall.SIGTERM)
 
@@ -31,8 +31,9 @@ func main() {
 	go func() {
 		select {
 		case <-quit:
-			close(stop)
+		case <-ctx.Done():
 		}
+		close(stop)
 	}()
 
 	for _, serv := range servers {
@@ -50,7 +51,7 @@ func main() {
 	}
 
 	if err := group.Wait(); err != nil {
-		fmt.Println("server err: ", err)
+		fmt.Println(err)
 	}
 }
 

@@ -2,6 +2,7 @@ package srv
 
 import (
 	"context"
+	"fmt"
 	"github.com/pkg/errors"
 	"net/http"
 	"time"
@@ -42,7 +43,7 @@ func (s *HttpServer) Start() error {
 		select {
 		case <-done:
 		case <-time.After(s.timeout):
-			return errors.New("before start timeout")
+			return errors.New(fmt.Sprintf("%s err: before start timeout", s.name))
 		}
 	}
 
@@ -68,7 +69,7 @@ func (s *HttpServer) Stop() error {
 		select {
 		case <-done:
 		case <-time.After(s.timeout):
-			return errors.New("after stop timeout")
+			return errors.New(fmt.Sprintf("%s err: after stop timeout", s.name))
 		}
 	}
 
