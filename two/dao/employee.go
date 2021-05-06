@@ -1,9 +1,11 @@
 package dao
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/pkg/errors"
 	"goadv/two/db"
+	_err "goadv/two/libs/errors"
 	"goadv/two/model"
 )
 
@@ -31,8 +33,10 @@ func (e *EmployeeDao) Insert(employee *model.Employee) error {
 
 func (e *EmployeeDao) FindById(id int64) (*model.Employee, error) {
 	employee, err := db.FindById(id)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("***[EmployeeDao] data not found, id: %d***", id))
+	if err == sql.ErrNoRows {
+		return nil, errors.Wrap(_err.NotFound, fmt.Sprintf("id: %d, err: %v", id, err))
+	} else if err != nil {
+		return nil, errors.Wrap(_err.Internal, fmt.Sprintf("id: %d, err: %v", id, err))
 	}
 	return employee, nil
 }

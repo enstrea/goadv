@@ -43,7 +43,13 @@ func insertTwo() {
 func getOne(id int64) {
 	employee, err := service.Employee.GetEmployeeInfo(id)
 	if err != nil {
-		handleErr(err)
+		if errors.Is(err, _err.NotFound) {
+			// 做些处理，比如插入新数据，或者打印错误
+			fmt.Println(fmt.Sprintf("%+v", err))
+		} else {
+			handleErr(err)
+		}
+
 		return
 	}
 	fmt.Println(employee)
@@ -54,9 +60,9 @@ func handleErr(err error) {
 
 	if err != nil {
 		log.Printf("%+v\n\n", err)
+	} else {
+		fmt.Println("err code: ", code)
 	}
-
-	fmt.Println("err code: ", code)
 }
 
 func getErrCode(err error) (int32, error) {
